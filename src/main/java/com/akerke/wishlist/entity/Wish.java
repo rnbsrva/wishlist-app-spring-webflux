@@ -24,11 +24,6 @@ public class Wish {
     private Boolean isHappened;
     private Category category;
 
-//    @JsonProperty("userId")
     public String userId;
 
-//    @JsonGetter("userId")
-//    String getUser(){
-//        return this.user.getId();
-//    }
 }

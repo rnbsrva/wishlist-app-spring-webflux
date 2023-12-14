@@ -2,6 +2,7 @@ package com.akerke.wishlist.service.impl;
 
 import com.akerke.wishlist.dto.UserDTO;
 import com.akerke.wishlist.entity.User;
+import com.akerke.wishlist.entity.Wish;
 import com.akerke.wishlist.exception.EntityNotFoundException;
 import com.akerke.wishlist.mapper.UserMapper;
 import com.akerke.wishlist.repository.UserRepository;
@@ -52,7 +53,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public Mono<Void> delete(String id) {
         return findById(id)
-                .flatMap(user -> userRepository.delete(user).then());
+                .flatMap(user -> {
+                    Flux<Wish> wishesToDelete = wishService.findAllByUserId(id);
+                    return wishesToDelete.collectList()
+                            .flatMap(wishes -> {
+                                user.getWishList().clear();
+                                return Flux.fromIterable(wishes)
+                                        .flatMap(wishService::delete)
+                                        .then(userRepository.delete(user));
+                            });
+                });
     }
 
     private Mono<User> enrichWish(Mono<User> user) {
